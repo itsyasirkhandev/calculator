@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { History as HistoryIcon, Trash2, Copy } from 'lucide-react';
+import { History as HistoryIcon, Trash2, Copy, Download, Upload } from 'lucide-react';
 import { useCalculator } from '@/react-app/contexts/CalculatorContext';
 import { Button } from '@/react-app/components/ui/Button';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -19,6 +19,19 @@ export function History() {
     dispatch({ type: 'CLEAR_HISTORY' });
   };
 
+  const exportHistory = () => {
+    const historyData = JSON.stringify(state.history, null, 2);
+    const blob = new Blob([historyData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `calculator-history-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -29,6 +42,11 @@ export function History() {
         <Button variant="default" size="sm" aria-label="View calculation history">
           <HistoryIcon size={18} />
           <span className="ml-2 hidden sm:inline">History</span>
+          {state.history.length > 0 && (
+            <span className="ml-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+              {state.history.length}
+            </span>
+          )}
         </Button>
       </Dialog.Trigger>
       
@@ -41,6 +59,15 @@ export function History() {
               Calculation History
             </Dialog.Title>
             <div className="flex items-center gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={exportHistory}
+                disabled={state.history.length === 0}
+                aria-label="Export history"
+              >
+                <Download size={16} />
+              </Button>
               <Button
                 variant="default"
                 size="sm"

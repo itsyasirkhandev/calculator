@@ -1,40 +1,5 @@
 import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-
-interface CalculationEntry {
-  id: string;
-  expression: string;
-  result: string;
-  timestamp: Date;
-}
-
-interface CalculatorState {
-  display: string;
-  previousValue: number | null;
-  operation: string | null;
-  waitingForNewValue: boolean;
-  memory: number;
-  history: CalculationEntry[];
-  isScientificMode: boolean;
-  decimalPlaces: number;
-}
-
-type CalculatorAction =
-  | { type: 'INPUT_DIGIT'; digit: string }
-  | { type: 'INPUT_DECIMAL' }
-  | { type: 'SET_OPERATION'; operation: string }
-  | { type: 'CALCULATE' }
-  | { type: 'CLEAR' }
-  | { type: 'CLEAR_ENTRY' }
-  | { type: 'BACKSPACE' }
-  | { type: 'MEMORY_STORE' }
-  | { type: 'MEMORY_RECALL' }
-  | { type: 'MEMORY_CLEAR' }
-  | { type: 'MEMORY_ADD' }
-  | { type: 'MEMORY_SUBTRACT' }
-  | { type: 'TOGGLE_MODE' }
-  | { type: 'SET_DECIMAL_PLACES'; places: number }
-  | { type: 'CLEAR_HISTORY' }
-  | { type: 'SCIENTIFIC_FUNCTION'; func: string };
+import { CalculatorState, CalculatorAction, CalculationEntry } from '@/shared/types';
 
 const initialState: CalculatorState = {
   display: '0',
@@ -45,6 +10,8 @@ const initialState: CalculatorState = {
   history: [],
   isScientificMode: false,
   decimalPlaces: 10,
+  angleMode: 'deg',
+  lastResult: null,
 };
 
 function addToHistory(state: CalculatorState, expression: string, result: string): CalculationEntry[] {
@@ -58,7 +25,8 @@ function addToHistory(state: CalculatorState, expression: string, result: string
 }
 
 function formatNumber(num: number, decimalPlaces: number): string {
-  if (isNaN(num) || !isFinite(num)) return 'Error';
+  if (isNaN(num)) return 'Error';
+  if (!isFinite(num)) return num > 0 ? 'Infinity' : '-Infinity';
   
   const rounded = Number(num.toFixed(decimalPlaces));
   if (rounded === 0) return '0';
@@ -73,28 +41,37 @@ function calculate(prev: number, current: number, operation: string): number {
     case '-': return prev - current;
     case '×': return prev * current;
     case '÷': return current !== 0 ? prev / current : NaN;
-    case '%': return (prev * current) / 100;
+    case '%': return prev * (current / 100);
     case '^': return Math.pow(prev, current);
     default: return current;
   }
 }
 
-function scientificFunction(value: number, func: string): number {
-  const radians = value * (Math.PI / 180); // Convert to radians for trig functions
+function scientificFunction(value: number, func: string, angleMode: 'deg' | 'rad'): number {
+  const radians = angleMode === 'deg' ? value * (Math.PI / 180) : value;
   
   switch (func) {
     case 'sin': return Math.sin(radians);
     case 'cos': return Math.cos(radians);
     case 'tan': return Math.tan(radians);
+    case 'asin': return angleMode === 'deg' ? Math.asin(value) * (180 / Math.PI) : Math.asin(value);
+    case 'acos': return angleMode === 'deg' ? Math.acos(value) * (180 / Math.PI) : Math.acos(value);
+    case 'atan': return angleMode === 'deg' ? Math.atan(value) * (180 / Math.PI) : Math.atan(value);
     case 'log': return Math.log10(value);
     case 'ln': return Math.log(value);
     case 'sqrt': return Math.sqrt(value);
+    case 'cbrt': return Math.cbrt(value);
     case 'x²': return value * value;
+    case 'x³': return value * value * value;
     case '1/x': return 1 / value;
+    case '10^x': return Math.pow(10, value);
+    case 'e^x': return Math.exp(value);
     case 'π': return Math.PI;
     case 'e': return Math.E;
+    case '|x|': return Math.abs(value);
     case '!': {
       if (value < 0 || value !== Math.floor(value)) return NaN;
+      if (value > 170) return Infinity; // Prevent overflow
       let result = 1;
       for (let i = 2; i <= value; i++) {
         result *= i;
@@ -108,6 +85,13 @@ function scientificFunction(value: number, func: string): number {
 function calculatorReducer(state: CalculatorState, action: CalculatorAction): CalculatorState {
   switch (action.type) {
     case 'INPUT_DIGIT':
+      if (state.display === 'Error' || state.display === 'Infinity' || state.display === '-Infinity') {
+        return {
+          ...state,
+          display: action.digit,
+          waitingForNewValue: false,
+        };
+      }
       if (state.waitingForNewValue) {
         return {
           ...state,
@@ -115,12 +99,20 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
           waitingForNewValue: false,
         };
       }
+      if (state.display.length >= 15) return state; // Limit display length
       return {
         ...state,
         display: state.display === '0' ? action.digit : state.display + action.digit,
       };
 
     case 'INPUT_DECIMAL':
+      if (state.display === 'Error' || state.display === 'Infinity' || state.display === '-Infinity') {
+        return {
+          ...state,
+          display: '0.',
+          waitingForNewValue: false,
+        };
+      }
       if (state.waitingForNewValue) {
         return {
           ...state,
@@ -134,8 +126,22 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
         display: state.display + '.',
       };
 
+    case 'TOGGLE_SIGN':
+      if (state.display === 'Error' || state.display === 'Infinity' || state.display === '-Infinity') {
+        return state;
+      }
+      const currentNum = parseFloat(state.display);
+      return {
+        ...state,
+        display: (-currentNum).toString(),
+      };
+
     case 'SET_OPERATION':
       const currentValue = parseFloat(state.display);
+      
+      if (isNaN(currentValue)) {
+        return state;
+      }
       
       if (state.previousValue === null) {
         return {
@@ -157,6 +163,7 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
           previousValue: result,
           operation: action.operation,
           waitingForNewValue: true,
+          lastResult: result,
           history: addToHistory(state, expression, formattedResult),
         };
       }
@@ -170,6 +177,8 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
     case 'CALCULATE':
       if (state.operation && state.previousValue !== null && !state.waitingForNewValue) {
         const currentValue = parseFloat(state.display);
+        if (isNaN(currentValue)) return state;
+        
         const result = calculate(state.previousValue, currentValue, state.operation);
         const formattedResult = formatNumber(result, state.decimalPlaces);
         const expression = `${state.previousValue} ${state.operation} ${currentValue}`;
@@ -180,6 +189,7 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
           previousValue: null,
           operation: null,
           waitingForNewValue: true,
+          lastResult: result,
           history: addToHistory(state, expression, formattedResult),
         };
       }
@@ -202,17 +212,21 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
       };
 
     case 'BACKSPACE':
-      if (state.waitingForNewValue) return state;
+      if (state.waitingForNewValue || state.display === 'Error' || state.display === 'Infinity' || state.display === '-Infinity') {
+        return state;
+      }
       const newDisplay = state.display.length > 1 ? state.display.slice(0, -1) : '0';
       return {
         ...state,
-        display: newDisplay,
+        display: newDisplay === '-' ? '0' : newDisplay,
       };
 
     case 'MEMORY_STORE':
+      const storeValue = parseFloat(state.display);
+      if (isNaN(storeValue)) return state;
       return {
         ...state,
-        memory: parseFloat(state.display),
+        memory: storeValue,
       };
 
     case 'MEMORY_RECALL':
@@ -229,21 +243,31 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
       };
 
     case 'MEMORY_ADD':
+      const addValue = parseFloat(state.display);
+      if (isNaN(addValue)) return state;
       return {
         ...state,
-        memory: state.memory + parseFloat(state.display),
+        memory: state.memory + addValue,
       };
 
     case 'MEMORY_SUBTRACT':
+      const subtractValue = parseFloat(state.display);
+      if (isNaN(subtractValue)) return state;
       return {
         ...state,
-        memory: state.memory - parseFloat(state.display),
+        memory: state.memory - subtractValue,
       };
 
     case 'TOGGLE_MODE':
       return {
         ...state,
         isScientificMode: !state.isScientificMode,
+      };
+
+    case 'TOGGLE_ANGLE_MODE':
+      return {
+        ...state,
+        angleMode: state.angleMode === 'deg' ? 'rad' : 'deg',
       };
 
     case 'SET_DECIMAL_PLACES':
@@ -258,9 +282,19 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
         history: [],
       };
 
+    case 'USE_LAST_RESULT':
+      if (state.lastResult === null) return state;
+      return {
+        ...state,
+        display: state.lastResult.toString(),
+        waitingForNewValue: true,
+      };
+
     case 'SCIENTIFIC_FUNCTION':
       const value = parseFloat(state.display);
-      const result = scientificFunction(value, action.func);
+      if (isNaN(value)) return state;
+      
+      const result = scientificFunction(value, action.func, state.angleMode);
       const formattedResult = formatNumber(result, state.decimalPlaces);
       const expression = `${action.func}(${value})`;
       
@@ -268,6 +302,7 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
         ...state,
         display: formattedResult,
         waitingForNewValue: true,
+        lastResult: result,
         history: addToHistory(state, expression, formattedResult),
       };
 
@@ -313,6 +348,10 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'BACKSPACE' });
       } else if (key === '%') {
         dispatch({ type: 'SET_OPERATION', operation: '%' });
+      } else if (key === '^') {
+        dispatch({ type: 'SET_OPERATION', operation: '^' });
+      } else if (key.toLowerCase() === 'a') {
+        dispatch({ type: 'USE_LAST_RESULT' });
       }
     }
 
