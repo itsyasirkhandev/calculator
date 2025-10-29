@@ -8,7 +8,7 @@
 [![Vite](https://img.shields.io/badge/Vite-7.1.3-646CFF?style=flat-square&logo=vite)](https://vitejs.dev/)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=flat-square&logo=cloudflare)](https://workers.cloudflare.com/)
 
-[🚀 Live Demo](https://calcflow-calulator.netlify.app) | [📖 Documentation](#getting-started)
+[🚀 Live Demo](https://calculator-yk.vercel.app/) | [📖 Documentation](#getting-started)
 
 ---
 
