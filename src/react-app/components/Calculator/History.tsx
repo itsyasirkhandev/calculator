@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { History as HistoryIcon, Trash2, Copy, Download, Upload } from 'lucide-react';
+import { History as HistoryIcon, Trash2, Copy, Download } from 'lucide-react';
 import { useCalculator } from '@/react-app/contexts/CalculatorContext';
 import { Button } from '@/react-app/components/ui/Button';
 import * as Dialog from '@radix-ui/react-dialog';

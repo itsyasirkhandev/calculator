@@ -1,6 +1,6 @@
 import { Button } from '@/react-app/components/ui/Button';
 import { useCalculator } from '@/react-app/contexts/CalculatorContext';
-import { RotateCcw, Delete, PlusCircle } from 'lucide-react';
+import { RotateCcw, Delete } from 'lucide-react';
 
 export function BasicButtonGrid() {
   const { state, dispatch } = useCalculator();

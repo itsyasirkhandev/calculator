@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Copy, Download } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { useCalculator } from '@/react-app/contexts/CalculatorContext';
 import { Button } from '@/react-app/components/ui/Button';
 
