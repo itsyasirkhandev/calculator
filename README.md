@@ -88,7 +88,7 @@ The application features smooth animations, dark/light theme support, calculatio
 - **TypeScript ESLint** - TypeScript-specific linting rules
 
 ### Deployment
-- **Netlify** - Frontend hosting and deployment
+- **Vercel** - Frontend hosting and deployment
 - **Cloudflare Workers** - Backend serverless functions
 
 ---
@@ -540,7 +540,7 @@ This project is open source and available under the [MIT License](LICENSE).
 ```
 MIT License
 
-Copyright (c) 2024 Yasir Khan
+Copyright (c) 2025 Yasir Khan
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -645,7 +645,7 @@ We take security seriously. If you discover a security vulnerability:
   <p><strong>CalcFlow</strong> - Making calculations beautiful and intuitive</p>
   
   <p>
-    <a href="https://calcflow-calulator.netlify.app">Live Demo</a> •
+    <a href="https://calculator-yk.vercel.app/">Live Demo</a> •
     <a href="https://github.com/itsyasirkhandev/calculator/issues">Report Bug</a> •
     <a href="https://github.com/itsyasirkhandev/calculator/issues">Request Feature</a>
   </p>
