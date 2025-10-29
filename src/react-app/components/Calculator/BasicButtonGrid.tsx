@@ -1,9 +1,9 @@
 import { Button } from '@/react-app/components/ui/Button';
 import { useCalculator } from '@/react-app/contexts/CalculatorContext';
-import { RotateCcw, Delete } from 'lucide-react';
+import { RotateCcw, Delete, PlusCircle } from 'lucide-react';
 
 export function BasicButtonGrid() {
-  const { dispatch } = useCalculator();
+  const { state, dispatch } = useCalculator();
 
   const handleDigit = (digit: string) => {
     dispatch({ type: 'INPUT_DIGIT', digit });
@@ -33,6 +33,10 @@ export function BasicButtonGrid() {
     dispatch({ type: 'BACKSPACE' });
   };
 
+  const handleToggleSign = () => {
+    dispatch({ type: 'TOGGLE_SIGN' });
+  };
+
   const handleMemoryStore = () => {
     dispatch({ type: 'MEMORY_STORE' });
   };
@@ -51,6 +55,10 @@ export function BasicButtonGrid() {
 
   const handleMemorySubtract = () => {
     dispatch({ type: 'MEMORY_SUBTRACT' });
+  };
+
+  const handleAns = () => {
+    dispatch({ type: 'USE_LAST_RESULT' });
   };
 
   return (
@@ -141,13 +149,24 @@ export function BasicButtonGrid() {
       </Button>
 
       {/* Fifth Row */}
-      <Button variant="number" onClick={() => handleDigit('0')} className="col-span-2" aria-label="Zero">
+      <Button variant="number" onClick={handleToggleSign} aria-label="Toggle Sign">
+        +/−
+      </Button>
+      <Button variant="number" onClick={() => handleDigit('0')} aria-label="Zero">
         0
       </Button>
       <Button variant="number" onClick={handleDecimal} aria-label="Decimal Point">
         .
       </Button>
-      <Button variant="equals" onClick={handleEquals} className="col-span-2" aria-label="Equals">
+      <Button 
+        variant="function" 
+        onClick={handleAns} 
+        disabled={state.lastResult === null}
+        aria-label="Use Last Result"
+      >
+        ANS
+      </Button>
+      <Button variant="equals" onClick={handleEquals} aria-label="Equals">
         =
       </Button>
     </div>

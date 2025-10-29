@@ -25,7 +25,7 @@ export function Calculator() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-              CalcFlow
+              CalcFlow Pro
             </h1>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
               {state.isScientificMode ? 'Scientific Mode' : 'Basic Mode'}
@@ -67,7 +67,7 @@ export function Calculator() {
         transition={{ delay: 0.5, duration: 0.3 }}
         className="mt-4 text-center text-xs text-neutral-500 dark:text-neutral-400"
       >
-        Use your keyboard for quick calculations • Press Esc to clear
+        Keyboard: 0-9, +, -, *, /, %, ^, Enter, Esc, Backspace • Press 'A' for ANS
       </motion.div>
     </motion.div>
   );

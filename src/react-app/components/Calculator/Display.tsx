@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Copy } from 'lucide-react';
+import { Copy, Download } from 'lucide-react';
 import { useCalculator } from '@/react-app/contexts/CalculatorContext';
 import { Button } from '@/react-app/components/ui/Button';
 
@@ -49,13 +49,23 @@ export function Display() {
           </div>
         )}
         
-        {state.memory !== 0 && (
-          <div className="absolute top-2 left-2">
+        <div className="flex items-center gap-2 mt-2">
+          {state.memory !== 0 && (
             <div className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
               M
             </div>
-          </div>
-        )}
+          )}
+          {state.isScientificMode && (
+            <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+              {state.angleMode.toUpperCase()}
+            </div>
+          )}
+          {state.lastResult !== null && (
+            <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+              ANS
+            </div>
+          )}
+        </div>
       </motion.div>
     </div>
   );
